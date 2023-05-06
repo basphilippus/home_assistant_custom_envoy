@@ -10,7 +10,7 @@ from json.decoder import JSONDecodeError
 
 import httpx
 from bs4 import BeautifulSoup
-from envoy_utils.envoy_utils import EnvoyUtils
+# from envoy_utils.envoy_utils import EnvoyUtils
 
 #
 # Legacy parser is only used on ancient firmwares
@@ -647,13 +647,17 @@ class EnvoyReader:  # pylint: disable=too-many-instance-attributes
         if self.endpoint_type == ENVOY_MODEL_S and self.isMeteringEnabled:
             raw_json = self.endpoint_production_json_results.json()
             lifetime_production = raw_json["production"][1]["whLifetime"]
-            if lifetime_production == 0:
+            if lifetime_production == 0.0:
                 lifetime_production = raw_json["production"][0]["whLifetime"]
         elif self.endpoint_type == ENVOY_MODEL_C or (
             self.endpoint_type == ENVOY_MODEL_S and not self.isMeteringEnabled
         ):
             raw_json = self.endpoint_production_v1_results.json()
             lifetime_production = raw_json["wattHoursLifetime"]
+            if lifetime_production == 0.0:
+                raw_json = self.endpoint_production_json_results.json()
+                lifetime_production = raw_json["production"][0]["whLifetime"]
+
         elif self.endpoint_type == ENVOY_MODEL_LEGACY:
             text = self.endpoint_production_results.text
             match = re.search(LIFE_PRODUCTION_REGEX, text, re.MULTILINE)
